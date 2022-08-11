@@ -74,3 +74,48 @@ math: katex
 - https://paperswithcode.com/paper/efficiently-modeling-long-sequences-with-1
 
 ---
+
+## 付録
+
+---
+
+## ルジャンドル多項式
+区間$[-1,1]$の$n$次のルジャンドル多項式の定義（ロドリゲスの公式）：
+
+$P_n(x) = \frac{(-1)^n}{2^n n!} \frac{d^n}{dx^n}(1-x^2)^n \quad (n=0,1,2,\dots)$
+
+具体的に計算すると、
+$$
+\begin{aligned}
+P_0(x) &= 1 \\
+P_1(x) &= x \\
+P_2(x) &= \frac{3}{2}x^2 - \frac{1}{2} \\
+P_3(x) &= \frac{5}{2}x^3 - \frac{3}{2}x
+\end{aligned}
+$$
+
+---
+
+## ルジャンドル多項式のもつ性質
+1. 正規化したルジャンドル多項式 $\sqrt{\frac{2n+1}{2}}P_n(x)$ は、区間 $[-1,1]$ 上の $L_2$ 空間の完全正規直交系
+2. $n$次のルジャンドル多項式は、$n-1$次以下のべき関数と直交する
+  $\int^{1}_{-1}x^m P_n(x)dx=0 \quad (m<n)$
+
+3. $P_n(1)=1,\ P_n(-1)=(-1)^n$
+
+4. ボネの漸化式 （証明は高木解析概論P.130参照）
+  $(n+1)P_{n+1}(x) - (2n+1)xP_n(x)+nP_{n-1}(x) = 0 \quad (n\ge 1)$
+
+---
+
+## ルジャンドル多項式のもつ性質
+
+5. HiPPOの論文でつかう漸化式
+
+$(2n+1)P_n(x)=P^\prime_{n+1}(x)-P^\prime_{n-1}(x)$
+
+$P^\prime_{n+1}(x)-xP^\prime_n(x)=(n+1)P_n(x)$
+
+$P^\prime_n(x) = (2n-1)P_{n-1}(x) + (2n-3)P_{n-2}(x) + \cdots$
+
+$(x+1)P^\prime_n(x) =nP_n(x) + (2n-1)P_{n-1}(x) + (2n-3)P_{n-2}(x) + \cdots$
