@@ -166,11 +166,26 @@ $$
 ---
 
 ## HiPPO-LegT の導出 (論文Appendix D.1)
-### 係数のダイナミクス
-
+### 係数のダイナミクス1
+「時間 $t$ に関する微分」に記載の式を用い、
 $$
 \begin{aligned}
-\frac{d}{dt} c_n(t) &= \int f(x) \left( \frac{\partial}{\partial t} g_n (t,x) \right) \omega (t,x) dx + \int f(x) g_n (t,x) \left( \frac{\partial}{\partial t} \omega (t,x) \right)
+\frac{d}{dt} c_n(t) =& \int f(x) \left( \frac{\partial}{\partial t} g_n (t,x) \right) \omega (t,x) dx \\ &+ \int f(x) g_n (t,x) \left( \frac{\partial}{\partial t} \omega (t,x) \right) \\
 
+ =& -\lambda_n \sqrt{2n+1} \cdot \frac{2}{\theta} \left[ \lambda^{-1}_{n-1} \sqrt{2n-1}\cdot c_{n-1}(t) + \lambda_{n-3}^{-1} \sqrt{2n-5} \cdot c_{n-3}(t) + \cdots \right] \\
+ &+ \frac{1}{\theta}f(t) g_n (t,t) -\frac{1}{\theta} f(t-\theta)g_n (t,t-\theta)
+
+\end{aligned}
+$$
+
+---
+
+## HiPPO-LegT の導出 (論文Appendix D.1)
+### 係数のダイナミクス2
+「測度と基底」と「幅 $\theta$ のスライディングウィンドウを動かしながらの関数近似」に記載の式を用い、
+$$
+\begin{aligned}
+\frac{d}{dt} c_n(t) \approx& -\frac{\lambda_n}{\theta} \sqrt{2n+1} \cdot 2 \left[  \sqrt{2n-1}\cdot \frac{c_{n-1}(t)}{\lambda_{n-1}} + \sqrt{2n-5} \cdot \frac{c_{n-3}(t)}{\lambda_{n-3}} + \cdots \right] \\
+ &+ \sqrt{2n+1} \cdot \frac{\lambda_n}{\theta} f(t) - \sqrt{2n+1} \cdot \frac{\lambda_n}{\theta} (-1)^n \sum^{N-1}_{k=0} \sqrt{2k+1} \cdot \frac{c_k(t)}{\lambda_k} (-1)^k
 \end{aligned}
 $$
