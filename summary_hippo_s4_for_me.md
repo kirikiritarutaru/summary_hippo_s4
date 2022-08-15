@@ -57,6 +57,32 @@ math: katex
 
 ---
 
+## HiPPO (high-order polynomial projection operators)
+  - 任意の関数を与えられた尺度に関して直交多項式空間に射影する演算子
+    - 尺度：過去における各時刻のデータの重要度
+- 入力関数 $f(t) : \mathbb{R}_+ \rightarrow \mathbb{R}$ が与えられたとき、逐次的に入ってくる入力を理解し、将来の予測を行うために、時刻 $t\ge 0$ ごとに累積history $f_{\le t}:= f(x)|_{x\le t}$ を操作することが必要
+  -   関数空間は非常に大きいので、historyを完全に記憶することができない→圧縮する
+  -   historyを有界次元の部分空間に射影する
+  -   しかも、圧縮したhistory の表現をオンラインで更新していく
+
+---
+
+## HiPPO の定式化
+**[定義 1]**
+- 時間 $t$ に伴って変化する $(-\infty, t]$ 上の測度族を $\mu^{(t)}$ 、多項式関数の $N$ 次元部分空間を $\mathcal{G}$ 、連続関数 $f:\mathbb{R}_{\ge0}\rightarrow \mathbb{R}$ とする。このとき、*HiPPO* は時間 $t$ ごとに射影演算子 $\text{proj}_t$ と係数抽出演算子 $\text{coef}_t$ を定義し、それらは以下の性質を持つ。
+    1. $\text{proj}_t$ は、関数 $f$ を時間 $t$ までに制限した関数 $f_{\le t}:=f(x)|_{x\le t}$ をとり、$f_{\le t}$ を近似誤差 $\| f_{\le t} - g^{(t)} \|_{L_2 (\mu^{(t)})}$ が最小になる多項式 $g^{(t)}\in \mathcal{G}$ に写像する。
+    2. $\text{coef}_t: \mathcal{G}\rightarrow \mathbb{R}^N$ は、多項式関数 $g^{(t)}$ を測度 $\mu^{(t)}$ に関して定義される直交多項式の基底の 係数 $c(t)\in \mathbb{R}^N$ に写像する。
+
+- 演算子の合成 $\text{coef}\circ \text{proj}$ を*hippo*とよび、この演算子は 関数 $f: \mathbb{R}_{\ge0}\rightarrow \mathbb{R}$ を最適な射影係数 $c:\mathbb{R}_{\ge0}\rightarrow \mathbb{R}^N$ に写像する。すなわち、 $(\text{hippo}(f))(t)=\text{coef}_t(\text{proj}_t (f))$ である。
+
+---
+
+## HiPPO の概念図
+
+![width:1000px](pic/HiPPO_Fig_1.png)
+
+---
+
 ## S4とは？
 一言でいうと
 - HiPPOのパラメータに制約を課し、計算高速化
@@ -302,12 +328,44 @@ $$
 ### 係数のダイナミクス 2
 liner ODE の形にまとめると、
 $$
-\frac{d}{dt} c(t) = -\frac{1}{t}A c(t) + \frac{1}{t} Bf(t) \\
-A_{nk} =
+\begin{aligned}
+\frac{d}{dt} c(t) &= -\frac{1}{t}A c(t) + \frac{1}{t} Bf(t) \\
+A_{nk} &=
 \begin{cases}
   \sqrt{2n+1}\cdot \sqrt{2k+1} &\text{if}& n>k \\
   n+1 &\text{if}& n=k \\
   0 &\text{if}& n<k
 \end{cases} \\
-B_n = \sqrt{2n+1}
+B_n &= \sqrt{2n+1}
+\end{aligned}
 $$
+
+---
+
+## HiPPO-LegS の導出 (論文Appendix D.3)
+### 得た係数から入力信号 $f$ を近似する関数を再構成する時
+
+任意の時間 $t$ において、
+$$
+\begin{aligned}
+f(x) \approx g^{(t)}(x)&= \sum_n c_n(t)g_n (t,t) \\
+&= \sum_n c_n(t) \sqrt{2n+1} \cdot P_n \left( 2\frac{x}{t} - 1 \right)
+\end{aligned}
+$$
+
+---
+
+## HiPPO-LegS 理論的特徴 (論文Appendix E)
+### 時間スケールへのロバスト性
+$\tilde{f}(t) = f(\alpha t),\ c = \text{proj}f,\ \tilde{c}=\text{proj}\tilde{f}$ とおく。
+ここで、 $\alpha>0$ は時間スケールの引き伸ばし度合い。
+$$
+\begin{aligned}
+\tilde{c}(t) &= \langle \tilde{f},g^{(t)}_n \rangle_{\mu^{(t)}} \\
+&= \int \tilde{f}(t) \sqrt{2n+1}\cdot P_n \left( 2\frac{x}{t}-1 \right) \frac{1}{t} \mathbb{I}_{[0,1]} \left( \frac{x}{t}\right) dx \\
+&= \int f(\alpha t) \sqrt{2n+1} \cdot P_n \left( 2\frac{x}{t}-1 \right) \frac{1}{t} \mathbb{I}_{[0,1]} \left( \frac{x}{t} \right) dx \\
+&= \int f(\alpha t) \sqrt{2n+1}\cdot P_n \left( 2\frac{x}{\alpha t}-1\right) \frac{1}{\alpha t} \mathbb{I}_{[0,1]} \left( \frac{x}{\alpha t} \right) dx \\
+&= c_n(\alpha t)
+\end{aligned}
+$$
+3行目→4行目の $=$ は、 $[0,t]$ の範囲から $[0,\alpha t]$ の範囲に変えただけ。
