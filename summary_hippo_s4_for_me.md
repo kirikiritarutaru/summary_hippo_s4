@@ -166,7 +166,8 @@ $g(t,x) = \sum g_n(t,x) = \sum \lambda_n p_n(t,x)$
 
 ## HiPPO-LegT の導出 (論文Appendix D.1)
 ### 時間 $t$ に関する微分
-- 測度の微分（ここで、 $\delta$ はディラックのデルタ）
+- 測度の微分（ここで、 $\delta$ はクロネッカ
+- ーのデルタ）
 $\frac{\partial}{\partial t} \omega(t,x) = \frac{1}{\theta} \delta_t - \frac{1}{\theta} \delta_{t-\theta}$
 - 近似する関数 $g_n$ の微分（ルジャンドル多項式の性質5.より）
 $$
@@ -286,7 +287,7 @@ $g(t,x) = \sum g_n(t,x) = \sum p_n(t,x)$
 
 ## HiPPO-LegS の導出 (論文Appendix D.3)
 ### 時間 $t$ に関する微分 1
-- 測度の微分（ここで、 $\delta$ はディラックのデルタ）
+- 測度の微分（ここで、 $\delta$ はクロネッカーのデルタ）
 $\frac{\partial}{\partial t} \omega(t,\cdot) = -t^{-2}\mathbb{I}_{[0,t]} + t^{-1}\delta_t = t^{-1} \left(-\omega(t) + \delta_t \right)$
 - 近似する関数 $g_n$ の微分
 $$
@@ -344,6 +345,32 @@ A_{nk} &=
 \end{cases} \\
 B_n &= \sqrt{2n+1}
 \end{aligned}
+$$
+
+---
+
+## HiPPO-LegS の導出 (論文Appendix D.3)
+### 係数のダイナミクス 3
+liner ODE を行列形式で示す。
+$$
+\frac{d}{dt}c(t) = -t^{-1}D \left[MD^{-1}c(t)+\bold{1}f(t) \right]
+$$
+ここで、$D:=\text{diag}\left[\sqrt{2n+1} \right]^{N-1}_{n=0}$ 、$\bold{1}$ は要素がすべて1のベクトル、$M$ は
+$$
+M =
+\begin{bmatrix}
+1      & 0      & 0      & 0      & \cdots & 0      \\
+1      & 2      & 0      & 0      & \cdots & 0      \\
+1      & 3      & 3      & 0      & \cdots & 0      \\
+1      & 3      & 5      & 4      & \cdots & 0      \\
+\vdots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+1      & 3      & 5      & 7      & \cdots & N
+\end{bmatrix},\quad
+M_{nk} = \begin{cases}
+2k+1 &\text{if}& k<n \\
+k+1 &\text{if}& k=n \\
+0 &\text{if}& k>n
+\end{cases}
 $$
 
 ---
