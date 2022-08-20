@@ -13,14 +13,14 @@ from scipy import special as ss
 
 
 # HiPPO matrices
-def transition(measure, N, **measure_args):
+def transition(method, N, **method_args):
     # Laguerre (translated)
-    if measure == 'lagt':
-        b = measure_args.get('beta', 1.0)
+    if method == 'lagt':
+        b = method_args.get('beta', 1.0)
         A = np.eye(N) / 2 - np.tril(np.ones((N, N)))
         B = b * np.ones((N, 1))
     # Legendre (translated)
-    elif measure == 'legt':
+    elif method == 'legt':
         Q = np.arange(N, dtype=np.float64)
         R = (2 * Q + 1) ** .5
         j, i = np.meshgrid(Q, Q)
@@ -28,7 +28,7 @@ def transition(measure, N, **measure_args):
         B = R[:, None]
         A = -A
     # Legendre (scaled)
-    elif measure == 'legs':
+    elif method == 'legs':
         q = np.arange(N, dtype=np.float64)
         col, row = np.meshgrid(q, q)
         r = 2 * q + 1
@@ -36,9 +36,8 @@ def transition(measure, N, **measure_args):
         T = np.sqrt(np.diag(2 * q + 1))
         A = T @ M @ np.linalg.inv(T)
         B = np.diag(T)[:, None]
-        B = B.copy()
-        # Otherwise "UserWarning: given NumPY array is not writeable..." after torch.as_tensor(B)
-    elif measure == 'fourier':
+        # B = B.copy()
+    elif method == 'fourier':
         freqs = np.arange(N // 2)
         d = np.stack([np.zeros(N // 2), freqs], axis=-1).reshape(-1)[1:]
         A = 2 * np.pi * (-np.diag(d, 1) + np.diag(d, -1))
@@ -81,6 +80,7 @@ def basis(method, N, vals, c=0.0, truncate_measure=True):
         _vals = np.exp(-vals)
         # (L, N)
         eval_matrix = ss.eval_legendre(np.arange(N)[:, None], 1 - 2 * _vals).T
+        # ルジャンドル多項式の正規化
         eval_matrix *= (2 * np.arange(N) + 1)**.5 * (-1)**np.arange(N)
     elif method == 'lagt':
         vals = vals[::-1]
@@ -95,7 +95,7 @@ def basis(method, N, vals, c=0.0, truncate_measure=True):
         cos[0] /= 2**.5
         # (T/dt, N)
         eval_matrix = np.stack([cos.T, sin.T], axis=-1).reshape(-1, N)
-    print("eval_matrix shape", eval_matrix.shape)
+    # print("eval_matrix shape", eval_matrix.shape)
 
     if truncate_measure:
         eval_matrix[measure(method)(vals) == 0.0] = 0.0
@@ -106,13 +106,18 @@ def basis(method, N, vals, c=0.0, truncate_measure=True):
 
 
 class HiPPO(nn.Module):
-    """ Linear time invariant x' = Ax + Bu """
+    """
+    Linear time invariant x' = Ax + Bu
+    """
 
-    def __init__(self, N, method='legs', dt=1.0, T=1.0,
-                 discretization='bilinear', c=0.0):
+    def __init__(
+        self, N, method='legs', dt=1.0, T=1.0,
+        discretization='bilinear', c=0.0
+    ):
         """
         N: the order of the HiPPO projection
-        dt: discretization step size - should be roughly inverse to the length of the sequence
+        dt: discretization step size
+            - should be roughly inverse to the length of the sequence
         """
         super().__init__()
         self.method = method
@@ -125,12 +130,12 @@ class HiPPO(nn.Module):
         A = A + np.eye(N) * c
         self.A = A
         self.B = B.squeeze(-1)
-        self.measure_fn = measure(method)
 
         C = np.ones((1, N))
         D = np.zeros((1,))
         dA, dB, _, _, _ = signal.cont2discrete(
-            (A, B, C, D), dt=dt, method=discretization)
+            (A, B, C, D), dt=dt, method=discretization
+        )
 
         dB = dB.squeeze(-1)
 
@@ -139,10 +144,10 @@ class HiPPO(nn.Module):
 
         self.vals = np.arange(0.0, T, dt)
         self.eval_matrix = basis(
-            self.method, self.N, self.vals, c=self.c)  # (T/dt, N)
-        self.measure = measure(self.method)(self.vals)
+            self.method, self.N, self.vals, c=self.c
+        )  # (T/dt, N)
 
-    def forward(self, inputs, fast=True):
+    def forward(self, inputs):
         """
         inputs : (length, ...)
         output : (length, ..., N) where N is the order of the HiPPO projection
@@ -151,9 +156,6 @@ class HiPPO(nn.Module):
         inputs = inputs.unsqueeze(-1)
         u = inputs * self.dB  # (length, ..., N)
 
-        if fast:
-            pass
-
         c = torch.zeros(u.shape[1:]).to(inputs)
         cs = []
         for f in inputs:
@@ -161,7 +163,8 @@ class HiPPO(nn.Module):
             cs.append(c)
         return torch.stack(cs, dim=0)
 
-    def reconstruct(self, c, evals=None):  # TODO take in a times array for reconstruction
+    # TODO take in a times array for reconstruction
+    def reconstruct(self, c, evals=None):
         """
         c: (..., N,) HiPPO coefficients (same as x(t) in S4 notation)
         output: (..., L,)
@@ -171,17 +174,20 @@ class HiPPO(nn.Module):
         else:
             eval_matrix = self.eval_matrix
 
-        m = self.measure[self.measure != 0.0]
-
         c = c.unsqueeze(-1)
         y = eval_matrix.to(c) @ c
         return y.squeeze(-1).flip(-1)
 
 
 class HiPPOScale(nn.Module):
-    """ Vanilla HiPPO-LegS model (scale invariant instead of time invariant) """
+    """
+    Vanilla HiPPO-LegS model (scale invariant instead of time invariant)
+    """
 
-    def __init__(self, N, method='legs', max_length=1024, discretization='bilinear'):
+    def __init__(
+            self, N, method='legs', max_length=1024,
+            discretization='bilinear'
+    ):
         """
         max_length: maximum sequence length
         """
@@ -198,27 +204,36 @@ class HiPPOScale(nn.Module):
                 A_stacked[t - 1] = np.eye(N) + At
                 B_stacked[t - 1] = Bt
             elif discretization == 'backward':
-                A_stacked[t - 1] = la.solve_triangular(np.eye(N) - At, np.eye(N), lower=True)
-                B_stacked[t - 1] = la.solve_triangular(np.eye(N) - At, Bt, lower=True)
+                A_stacked[t - 1] = la.solve_triangular(
+                    np.eye(N) - At, np.eye(N), lower=True
+                )
+                B_stacked[t - 1] = la.solve_triangular(
+                    np.eye(N) - At, Bt, lower=True
+                )
             elif discretization == 'bilinear':
                 A_stacked[t - 1] = la.solve_triangular(
                     np.eye(N) - At / 2, np.eye(N) + At / 2, lower=True
                 )
-                B_stacked[t - 1] = la.solve_triangular(np.eye(N) - At / 2, Bt, lower=True)
+                B_stacked[t - 1] = la.solve_triangular(
+                    np.eye(N) - At / 2, Bt, lower=True
+                )
             else:  # ZOH
                 A_stacked[t - 1] = la.expm(A * (math.log(t + 1) - math.log(t)))
-                B_stacked[t - 1] = la.solve_triangular(A, A_stacked[t - 1] @ B - B, lower=True)
+                B_stacked[t - 1] = la.solve_triangular(
+                    A, A_stacked[t - 1] @ B - B, lower=True
+                )
         # (max_length, N, N)
         self.register_buffer('A_stacked', torch.Tensor(A_stacked))
         # (max_length, N)
         self.register_buffer('B_stacked', torch.Tensor(B_stacked))
 
         vals = np.linspace(0.0, 1.0, max_length)
-        self.eval_matrix = torch.Tensor(
-            (B[:, None] * ss.eval_legendre(np.arange(N)[:, None], 2 * vals - 1)).T
-        )
+        self.eval_matrix = torch.Tensor((
+            B[:, None] *
+            ss.eval_legendre(np.arange(N)[:, None], 2 * vals - 1)
+        ).T)
 
-    def forward(self, inputs, fast=True):
+    def forward(self, inputs):
         """
         inputs : (length, ...)
         output : (length, ..., N) where N is the order of the HiPPO projection
@@ -231,9 +246,6 @@ class HiPPOScale(nn.Module):
         u = u * self.B_stacked[:L]
         u = torch.transpose(u, 0, -2)  # (length, ..., N)
 
-        if fast:
-            pass
-
         c = torch.zeros(u.shape[1:]).to(inputs)
         cs = []
         for t, f in enumerate(inputs):
@@ -242,5 +254,4 @@ class HiPPOScale(nn.Module):
         return torch.stack(cs, dim=0)
 
     def reconstruct(self, c):
-        a = self.eval_matrix.to(c) @ c.unsqueeze(-1)
-        return a
+        return self.eval_matrix.to(c) @ c.unsqueeze(-1)

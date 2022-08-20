@@ -1,12 +1,6 @@
 # Referenced code
 # https://github.com/HazyResearch/state-spaces/blob/main/src/models/hippo/visualizations.py
 
-"""
-Standalone implementation of HiPPO operators.
-Contains experiments for the function reconstruction experiment in original HiPPO paper, as well as new animations from "How to Train Your HiPPO"
-This file ports the notebook notebooks/hippo_function_approximation.ipynb, which is recommended if Jupyter is supported
-"""
-
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -26,7 +20,8 @@ sns.set(rc={
 })
 sns.set_style('ticks')
 
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+device = torch.device(
+    'cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 cwd = Path(__file__).parent
 
@@ -34,19 +29,20 @@ cwd = Path(__file__).parent
 # Synthetic data generation
 def whitesignal(period, dt, freq, rms=0.5, batch_shape=()):
     """
-    Produces output signal of length period / dt, band-limited to frequency freq
-    Output shape (*batch_shape, period/dt)
-    Adapted from the nengo library
+    Produces output signal of length period / dt, band-limited to frequency
+    freq Output shape (*batch_shape, period/dt) Adapted from the nengo library
     """
 
     if freq is not None and freq < 1. / period:
         raise ValueError(
-            f"Make ``{freq=} >= 1. / {period=}`` to produce a non-zero signal",)
+            f"Make ``{freq=} >= 1. / {period=}`` to produce a non-zero signal",
+        )
 
     nyquist_cutoff = 0.5 / dt
     if freq > nyquist_cutoff:
         raise ValueError(
-            f"{freq} must not exceed the Nyquist frequency for the given dt ({nyquist_cutoff:0.3f})")
+            f"{freq} must not exceed the Nyquist frequency for the given dt ({nyquist_cutoff:0.3f})"
+        )
 
     n_coefficients = int(np.ceil(period / dt / 2.))
     shape = batch_shape + (n_coefficients + 1,)
@@ -58,7 +54,8 @@ def whitesignal(period, dt, freq, rms=0.5, batch_shape=()):
 
     set_to_zero = np.fft.rfftfreq(2 * n_coefficients, d=dt) > freq
     coefficients *= (1 - set_to_zero)
-    power_correction = np.sqrt(1. - np.sum(set_to_zero, dtype=float) / n_coefficients)
+    power_correction = np.sqrt(
+        1. - np.sum(set_to_zero, dtype=float) / n_coefficients)
     if power_correction > 0.:
         coefficients /= power_correction
     coefficients *= np.sqrt(2 * n_coefficients)
@@ -99,7 +96,8 @@ def animate_hippo(
     u = torch.FloatTensor(whitesignal(T, dt, freq=freq))
     u = F.pad(u, (1, 0))
     # add 3/4 of a sin cycle
-    u = u + torch.FloatTensor(np.sin(1.5 * np.pi / T * np.arange(0, T + dt, dt)))
+    u = u + torch.FloatTensor(np.sin(1.5 * np.pi /
+                              T * np.arange(0, T + dt, dt)))
     u = u.to(device)
 
     hippo = HiPPO(method=method, N=N, dt=dt, T=T).to(device)
@@ -120,8 +118,10 @@ def animate_hippo(
 
     if plot_measure:
         label_args = {'label': 'HiPPO Measure'} if label_measure else {}
-        ln_measure = plt_lines(vals, np.zeros(
-            len(vals)) + measure_offset, size=size, color='green', **label_args)
+        ln_measure = plt_lines(
+            vals, np.zeros(len(vals)) + measure_offset,
+            size=size, color='green', **label_args
+        )
 
     if plot_coeff is None:
         plot_coeff = []
@@ -196,7 +196,8 @@ def animate_hippo(
         if len(plot_coeff) > 0:
             for coeff, ln_coeff in zip(plot_coeff, ln_coeffs):
                 update_lines(
-                    ln_coeff, np.arange(frame), coef_hippo[:frame, coeff] + coeff_offset
+                    ln_coeff, np.arange(
+                        frame), coef_hippo[:frame, coeff] + coeff_offset
                 )
         if plot_s4:  # Only scale case; scale case should copy plot_hippo logic
             update_lines(ln_s4, np.arange(0, frame), s4[:frame] + s4_offset)
@@ -208,7 +209,8 @@ def animate_hippo(
 
     ani = FuncAnimation(
         fig, update,
-        frames=np.arange(0, int(T * 1000 / interval) + 1) * int(interval / 1000 / dt),
+        frames=np.arange(0, int(T * 1000 / interval) + 1) *
+        int(interval / 1000 / dt),
         interval=interval, init_func=init, blit=True
     )
 
