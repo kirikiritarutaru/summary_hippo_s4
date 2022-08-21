@@ -96,8 +96,9 @@ def animate_hippo(
     u = torch.FloatTensor(whitesignal(T, dt, freq=freq))
     u = F.pad(u, (1, 0))
     # add 3/4 of a sin cycle
-    u = u + torch.FloatTensor(np.sin(1.5 * np.pi /
-                              T * np.arange(0, T + dt, dt)))
+    u = u + torch.FloatTensor(
+        np.sin(1.5 * np.pi / T * np.arange(0, T + dt, dt))
+    )
     u = u.to(device)
 
     hippo = HiPPO(method=method, N=N, dt=dt, T=T).to(device)
@@ -218,35 +219,40 @@ def animate_hippo(
 
 
 if __name__ == '__main__':
-    # Visualize HiPPO online reconstruction
-    ani = animate_hippo(
-        'legs',  # Try 'legt' or 'fourier'
-        T=5, dt=5e-4, N=64, interval=100,
-        # T=1, dt=1e-3, N=64, interval=200, # Faster rendering for testing
-        size=1.0,
+    show_hippo = True
+    if show_hippo:
+        # Visualize HiPPO online reconstruction
+        ani = animate_hippo(
+            'lagt',  # Try 'legt' or 'fourier'
+            T=5, dt=5e-4, N=64, interval=100,
+            # T=1, dt=1e-3, N=64, interval=200,  # Faster rendering for testing
+            size=1.0,
 
-        animate_u=True,
-        plot_hippo=True, hippo_offset=0.0, label_hippo=True,
-        plot_s4=False, s4_offset=6.0,
-        plot_measure=True, measure_offset=-3.0, label_measure=True,
-        plot_coeff=[], coeff_offset=3.0,
-        plot_legend=True, plot_xticks=True, plot_box=True,
-        plot_vline=True,
-    )
-    ani.save(str(cwd / 'output' / 'hippo_legs.gif'))
+            animate_u=True,
+            plot_hippo=True, hippo_offset=0.0, label_hippo=True,
+            plot_s4=False, s4_offset=6.0,
+            plot_measure=True, measure_offset=-3.0, label_measure=True,
+            plot_coeff=[], coeff_offset=3.0,
+            plot_legend=True, plot_xticks=True, plot_box=True,
+            plot_vline=True,
+        )
+        # ani.save(str(cwd / 'output' / 'hippo_legs.gif'))
+        # ani.save(str(cwd / 'output' / 'hippo_legt.gif'))
+        # ani.save(str(cwd / 'output' / 'hippo_fourier.gif'))
+        ani.save(str(cwd / 'output' / 'hippo_lagt.gif'))
+    else:
+        # Visualize S4
+        ani = animate_hippo(
+            'legs',  # Try 'legt' or 'fourier'
+            T=5, dt=5e-4, N=64, interval=100,
+            size=1.0,
 
-    # Visualize S4
-    ani = animate_hippo(
-        'legs',  # Try 'legt' or 'fourier'
-        T=5, dt=5e-4, N=64, interval=100,
-        size=1.0,
-
-        animate_u=True,
-        plot_hippo=False, hippo_offset=0.0, label_hippo=True,
-        plot_s4=True, s4_offset=6.0,
-        plot_measure=False, measure_offset=-3.0, label_measure=True,
-        plot_coeff=[0, 1, 2, 3], coeff_offset=3.0,
-        plot_legend=True, plot_xticks=True, plot_box=True,
-        plot_vline=True,
-    )
-    ani.save(str(cwd / 'output' / 's4_legs.gif'))
+            animate_u=True,
+            plot_hippo=False, hippo_offset=0.0, label_hippo=True,
+            plot_s4=True, s4_offset=6.0,
+            plot_measure=False, measure_offset=-3.0, label_measure=True,
+            plot_coeff=[0, 1, 2, 3], coeff_offset=3.0,
+            plot_legend=True, plot_xticks=True, plot_box=True,
+            plot_vline=True,
+        )
+        ani.save(str(cwd / 'output' / 's4_legs.gif'))

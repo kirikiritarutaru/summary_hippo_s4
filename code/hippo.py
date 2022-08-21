@@ -130,6 +130,7 @@ class HiPPO(nn.Module):
         A = A + np.eye(N) * c
         self.A = A
         self.B = B.squeeze(-1)
+        self.measure_fn = measure(method)
 
         C = np.ones((1, N))
         D = np.zeros((1,))
