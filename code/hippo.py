@@ -32,11 +32,14 @@ def transition(method, N, **method_args):
         q = np.arange(N, dtype=np.float64)
         col, row = np.meshgrid(q, q)
         r = 2 * q + 1
+
+        # HiPPO論文p.31 (30)のM
         M = -(np.where(row >= col, r, 0) - np.diag(q))
+
+        # HiPPO論文p.31 (30)のD
         T = np.sqrt(np.diag(2 * q + 1))
         A = T @ M @ np.linalg.inv(T)
         B = np.diag(T)[:, None]
-        # B = B.copy()
     elif method == 'fourier':
         freqs = np.arange(N // 2)
         d = np.stack([np.zeros(N // 2), freqs], axis=-1).reshape(-1)[1:]
@@ -199,6 +202,8 @@ class HiPPOScale(nn.Module):
         A_stacked = np.empty((max_length, N, N), dtype=A.dtype)
         B_stacked = np.empty((max_length, N), dtype=B.dtype)
         for t in range(1, max_length + 1):
+            # [0,t]の各点に一様な重みをつけるので、1/t
+            # 測度が反映されている?
             At = A / t
             Bt = B / t
             if discretization == 'forward':
@@ -212,6 +217,8 @@ class HiPPOScale(nn.Module):
                     np.eye(N) - At, Bt, lower=True
                 )
             elif discretization == 'bilinear':
+                # TODO: 離散化の手順要確認
+                # AとAの真ん中のところってコト…!?
                 A_stacked[t - 1] = la.solve_triangular(
                     np.eye(N) - At / 2, np.eye(N) + At / 2, lower=True
                 )
@@ -229,6 +236,7 @@ class HiPPOScale(nn.Module):
         self.register_buffer('B_stacked', torch.Tensor(B_stacked))
 
         vals = np.linspace(0.0, 1.0, max_length)
+        # ルジャンドル多項式の係数の行列
         self.eval_matrix = torch.Tensor((
             B[:, None] *
             ss.eval_legendre(np.arange(N)[:, None], 2 * vals - 1)
@@ -247,9 +255,11 @@ class HiPPOScale(nn.Module):
         u = u * self.B_stacked[:L]
         u = torch.transpose(u, 0, -2)  # (length, ..., N)
 
+        # TODO:torchの仕様確認
         c = torch.zeros(u.shape[1:]).to(inputs)
         cs = []
         for t, f in enumerate(inputs):
+            # ルジャンドル多項式の係数の更新
             c = F.linear(c, self.A_stacked[t]) + self.B_stacked[t] * f
             cs.append(c)
         return torch.stack(cs, dim=0)
