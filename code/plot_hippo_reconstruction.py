@@ -186,28 +186,45 @@ def plot_LSI():
 
     axes['A'].set_title('White Signal')
     axes['A'].plot(vals, u.cpu(), 'k', linewidth=1.0)
-    axes['B'].plot(vals, u.cpu(), 'k', linewidth=1.0)
+    # axes['B'].plot(vals, u.cpu(), 'k', linewidth=1.0)
 
     # Original HiPPO-LegS, which uses time-varying SSM x' = 1/t [ Ax + Bu]
     # we call this "linear scale invariant"
     lsi_methods = ['legs']
+    print(f'max_length: {int(conf.signal.T / conf.signal.dt)}')
     for method in lsi_methods:
         hippo = HiPPOScale(
             method=method,
             N=conf.hippo.N,
             max_length=int(conf.signal.T / conf.signal.dt)
         ).to(device)
-        u_hippo = hippo.reconstruct(hippo(u))[-1].cpu()
-        axes['B'].plot(
-            vals[-len(u_hippo):], u_hippo, label=method + ' (scaled)', ls=':'
-        )
 
-    axes['B'].set_title('HiPPO Reconstruction')
-    axes['B'].set_xlabel('Time (Normalized)')
-    axes['B'].legend()
-    if conf.exp.save_fig:
-        fig.savefig(conf.exp.fig_path, bbox_inches='tight')
-    plt.show()
+        # print(f'hippo(u) size: {hippo(u).size()}')
+        # print(
+        #    f'hippo reconstruct size: {hippo.reconstruct(hippo(u)).size()}'
+        # )
+
+        # hippo(u) により、各時刻tにおけるルジャンドル多項式の係数が帰ってくる
+        # 逐次的に推論するように修正？
+        # 横軸のスケールがあってない気がする
+        # TODO: 要修正
+        for i in range(len(u)):
+            if i < 10:
+                continue
+            _u = u[:i]
+            u_hippo = hippo.reconstruct(hippo(_u))[-1].cpu()
+            axes['B'].plot(
+                vals[-len(u_hippo):], u_hippo,
+                label=method + ' (scaled)', ls=':'
+            )
+
+            axes['B'].set_title('HiPPO Reconstruction')
+            axes['B'].set_xlabel('Time (Normalized)')
+            axes['B'].legend()
+            if conf.exp.save_fig:
+                fig.savefig(conf.exp.fig_path, bbox_inches='tight')
+            plt.pause(.1)
+            axes['B'].cla()
 
 
 if __name__ == '__main__':
