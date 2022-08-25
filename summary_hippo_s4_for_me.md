@@ -5,6 +5,14 @@ transition: "none"
 math: katex
 ---
 
+<style>
+blockquote {
+    border-top: 0.1em dashed #555;
+    font-size: 60%;
+    margin-top: auto;
+}
+</style>
+
 # HiPPOとS4の自分用まとめ
 
 ---
@@ -93,7 +101,7 @@ $f$ を $N$ 個の直交多項式 $g_n$ で張られる空間上に直交射影�
 8つのルジャンドル多項式 $\{g_n\}$ （青）の線型結合により、関数 $f$ （赤）を表現
 ![width:400px](pic/leg.png)
 
-参考: https://srush.github.io/annotated-s4/
+>参考記事: https://srush.github.io/annotated-s4/
 
 ---
 
