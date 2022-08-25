@@ -5,6 +5,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.polynomial.legendre
+import seaborn
 import torch
 from box import Box
 
@@ -227,6 +229,46 @@ def plot_LSI():
             axes['B'].cla()
 
 
+def example_legendre(N=8):
+    # Random hidden state as coefficients
+    x = (np.random.rand(N) - 0.5) * 2
+    t = np.linspace(-1, 1, 100)
+    f = numpy.polynomial.legendre.Legendre(x)(t)
+
+    # Plot
+    seaborn.set_context("talk")
+    fig = plt.figure(figsize=(20, 10))
+    ax = fig.add_subplot(projection="3d")
+    ax.plot(
+        np.linspace(-25, (N - 1) * 100 + 25, 100),
+        [0] * 100, zs=-1, zdir="x", color="black",
+    )
+    ax.plot(t, f, zs=N * 100, zdir="y", c="r")
+    for i in range(N):
+        coef = [0] * N
+        coef[N - i - 1] = 1
+        ax.set_zlim(-4, 4)
+        ax.set_yticks([])
+        ax.set_zticks([])
+        # Plot basis function.
+        f = numpy.polynomial.legendre.Legendre(coef)(t)
+        ax.bar(
+            [100 * i],
+            [x[i]],
+            zs=-1,
+            zdir="x",
+            label="x%d" % i,
+            color="brown",
+            fill=False,
+            width=50,
+        )
+        ax.plot(t, f, zs=100 * i, zdir="y", c="b", alpha=0.5)
+    ax.view_init(elev=40.0, azim=-45)
+    conf.exp.fig_path = cwd/'output'/'leg.png'
+    fig.savefig(conf.exp.fig_path, bbox_inches='tight')
+
+
 if __name__ == '__main__':
     # plot_LTI()
-    plot_LSI()
+    # plot_LSI()
+    example_legendre()
