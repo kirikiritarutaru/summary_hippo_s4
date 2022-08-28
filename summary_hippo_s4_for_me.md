@@ -105,37 +105,80 @@ $f$ を $N$ 個の直交多項式 $g_n$ で張られる空間上に直交射影�
 
 ---
 
-## S4とは？
+## Structured State Space for Sequence Modeling (S4) とは？
 一言でいうと
-- 状態空間モデルとDNNを組み合わせたモデル
-  - 計算高速化と省メモリ化の工夫多数
-    - シーケンスを処理する Recurrent な部分を畳み込み Convolution の処理に置き換え並列化し計算を高速化
-    - HiPPOのパラメータに制約を追加し、計算を高速化
+- 状態空間モデルとDNNを組み合わせ、長いシーケンスを効率的にモデリングする手法
+  - HiPPOフレームワークによる長期的な時間依存性への対処
+  - 計算高速化と省メモリ化の多数の工夫
+    - シーケンスを処理する Recurrent な部分を畳み込み Convolution の処理に置き換え並列化し、計算を高速化
+    - HiPPO行列に制約を追加し、計算を高速化
+
+---
+
+## S4 の概念図
+![width:1000px](pic/S4_Fig_1.png)
 
 ---
 
 ## 状態空間モデル (State Space Models) とは？
 時刻を $t$ とする。1次元の入力信号を $u(t)$、 $N$ 次元の隠れ状態 $x(t)$ を1次元の出力信号 $y(t)$ に射影するモデル。
-
-以下の式で定義される。$A,B,C,D$ はモデルのパラメータの行列。
+以下の式で定義される。$\bm{A},\bm{B},\bm{C},\bm{D}$ はモデルのパラメータ。
 $$
 \begin{aligned}
-x^{\prime}(t) &= Ax(t)+ Bu(t) \\
-y(t) &= Cx(t)+Du(t)
+x^{\prime}(t) &= \bm{A}x(t)+ \bm{B}u(t) \\
+y(t) &= \bm{C}x(t)+\bm{D}u(t)
 \end{aligned}
 $$
 
-S4 では、時系列を取り扱うDNNのブラックボックス表現として状態空間モデルを利用する。
-（S4では、$D=0$ と仮定する。）
+S4 では、時系列を取り扱うDNNのブラックボックス表現として状態空間モデルを利用する。（S4では、$\bm{D}=0$ と仮定する。$\bm{D}u$ の項はスキップ接続とみなすことができ、計算が簡単）
+
+---
+
+## 状態空間モデルの離散化
+
+ステップサイズ $\Delta$ で連続関数 $u(t)$ を離散化。これは、連続な信号 $u(t)$ を $\Delta$ ごとにサンプリングしているとみなせる。
+$$
+\begin{aligned}
+x_k &= \bm{\overline{A}}x_{k-1} + \bm{\overline{B}}u_k \\
+y_k &= \bm{\overline{C}}x_k
+\end{aligned}
+$$
+ここで、パラメータ $\bm{A},\bm{B},\bm{C}$ をバイリニア法を用いて離散化した各パラメータの近似行列 $\bm{\overline{A}}, \bm{\overline{B}}, \bm{\overline{C}}$ は、
+$$
+\begin{aligned}
+\bm{\overline{A}} &= \left(\bm{I} - \frac{\Delta}{2}\cdot \bm{A} \right)^{-1} \left(\bm{I} + \frac{\Delta}{2}\cdot \bm{A} \right) \\
+\bm{\overline{B}} &= \left(\bm{I} - \frac{\Delta}{2}\cdot \bm{A} \right)^{-1}\Delta \bm{B},\quad \bm{\overline{C}} = \bm{C}
+\end{aligned}
+$$
+
+---
+
+## 状態空間モデルの畳み込み表現
+リカレントな SSM は計算が遅い。並列化しやすい Convolutional な計算に変更する。
+$$
+\begin{aligned}
+y_k &= \overline{\bm{C}}\overline{\bm{A}}^k\overline{\bm{B}}u_0 + \overline{\bm{C}}\overline{\bm{A}}^{k-1}\overline{\bm{B}}u_1 + \cdots + \overline{\bm{C}}\overline{\bm{A}}\overline{\bm{B}}u_{k-1} + \overline{\bm{C}}\overline{\bm{B}}u_k \\
+y &= \overline{\bm{K}} * u
+\end{aligned}
+$$
+ここで、畳み込みカーネル $\overline{\bm{K}}$ は
+$$
+\overline{\bm{K}} \in \mathbb{R}^L := \mathcal{K}_L\left(\overline{A}, \overline{B}, \overline{C} \right) :=\left(\overline{\bm{C}}\overline{\bm{A}}^i\overline{\bm{B}} \right)_{i\in[L]} = \left(\overline{\bm{C}}\overline{\bm{B}},\ \overline{\bm{C}}\overline{\bm{A}}\overline{\bm{B}},\ \dots,\ \overline{\bm{C}}\overline{\bm{A}}^{L-1}\overline{\bm{B}} \right).
+$$
+以後、$\overline{\bm{K}}$ を SSM 畳み込みカーネル or SSM 畳み込みフィルターと呼ぶ。
+
+---
+
+## S4の性能まとめ
+
+全てのデータセットで最高精度。世界で初めて PATH-X を解けたモデル。
+
+![width:1000px](pic/S4_Table_4.png)
+
+> [Paper with Code の S4 の結果まとめ](https://paperswithcode.com/paper/efficiently-modeling-long-sequences-with-1)も参照のこと
 
 ---
 
 ## HiPPOとS4の実装
 
 - https://github.com/HazyResearch/state-spaces
-
----
-
-## S4の性能まとめ
-
-- https://paperswithcode.com/paper/efficiently-modeling-long-sequences-with-1
