@@ -16,14 +16,26 @@ $$
 $$
 
 証明）
-実際に計算して確かめる。（太字を省略）
+実際に計算して確かめる。
 $$
 \begin{aligned}
-&(A+BC)\left\{ A^{-1}- A^{-1}B(I+CA^{-1}B)^{-1}CA^{-1} \right\} \\
-&= I - \textcolor{Red}{\underline{\textcolor{black}{B}}}(I+CA^{-1}B)^{-1}\textcolor{Green}{\underline{\textcolor{black}{CA^{-1}}}} + \textcolor{Red}{\underline{\textcolor{black}{B}}}\textcolor{Green}{\underline{\textcolor{black}{CA^{-1}}}} - \textcolor{Red}{\underline{\textcolor{black}{B}}}CA^{-1}B(I+CA^{-1}B)^{-1}\textcolor{Green}{\underline{\textcolor{black}{CA^{-1}}}} \\
-&= I - B\left\{\textcolor{blue}{\underline{\textcolor{black}{(I+CA^{-1}B)^{-1}}}}-I+CA^{-1}B\textcolor{blue}{\underline{\textcolor{black}{(I+CA^{-1}B)^{-1}}}} \right\}CA^{-1} \\
-&= I - B\left\{(I+CA^{-1}B)(I+CA^{-1}B)^{-1} - I \right\}CA^{-1} \\
-&= I
+&(\bm{A}+\bm{BC})\left\{ \bm{A}^{-1}- \bm{A}^{-1}\bm{B}(\bm{I}+\bm{CA}^{-1}\bm{B})^{-1}\bm{CA}^{-1} \right\} \\
+&= \bm{I} - \textcolor{Red}{\underline{\textcolor{black}{\bm{B}}}}(\bm{I}+\bm{CA}^{-1}\bm{B})^{-1}\textcolor{Green}{\underline{\textcolor{black}{\bm{CA}^{-1}}}} + \textcolor{Red}{\underline{\textcolor{black}{\bm{B}}}}\textcolor{Green}{\underline{\textcolor{black}{\bm{CA}^{-1}}}} - \textcolor{Red}{\underline{\textcolor{black}{\bm{B}}}}\bm{CA}^{-1}\bm{B}(\bm{I}+\bm{CA}^{-1}\bm{B})^{-1}\textcolor{Green}{\underline{\textcolor{black}{\bm{CA}^{-1}}}} \\
+&= \bm{I} - \bm{B}\left\{\textcolor{blue}{\underline{\textcolor{black}{(\bm{I}+\bm{CA}^{-1}\bm{B})^{-1}}}}-\bm{I}+\bm{CA}^{-1}\bm{B}\textcolor{blue}{\underline{\textcolor{black}{(\bm{I}+\bm{CA}^{-1}\bm{B})^{-1}}}} \right\}\bm{CA}^{-1} \\
+&= \bm{I} - \bm{B}\left\{(\bm{I}+\bm{CA}^{-1}\bm{B})(\bm{I}+\bm{CA}^{-1}\bm{B})^{-1} - \bm{I} \right\}\bm{CA}^{-1} \\
+&= \bm{I}
+\end{aligned}
+$$
+
+---
+
+## SSM 畳み込みカーネル
+
+$$
+\begin{aligned}
+x_0 &=& \overline{\bm{B}}u_0 \qquad x_1 &=& \overline{\bm{AB}}u_0 + \overline{\bm{B}}u_1 \qquad x_2 &=& \overline{\bm{A}}^2 \overline{\bm{B}}u_0 + \overline{\bm{AB}}u_1 + \overline{\bm{B}}u_2 \quad \cdots \\
+y_0 &=& \overline{\bm{CB}}u_0 \qquad y_1 &=& \overline{\bm{CAB}}u_0 + \overline{\bm{CB}}u_1 \qquad y_2 &=& \overline{\bm{C}}\overline{\bm{A}}^2 \overline{\bm{B}}u_0 + \overline{\bm{CAB}}u_1 + \overline{\bm{CB}}u_2 \quad \cdots
+
 \end{aligned}
 $$
 
