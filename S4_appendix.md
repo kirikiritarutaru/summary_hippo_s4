@@ -138,13 +138,13 @@ TODO: 文字の定義を書け
 ## 畳み込み定理
 
 畳み込みの計算は、高速フーリエ変換 (FFT) を用いて高速に計算できる。
-$N$ 点の信号 $h[n]$ と $x[n]$ の畳み込み $y[n]$ を計算する場合、
+$N$ 点の信号 $h_n$ と $x_n$ の畳み込み $y_n$ を計算する場合、
 - 畳み込みを直接計算（計算量：$O\left(N^2 \right)$）
-線形畳み込み： $y[n] = \sum^{N-1}_{k=0} h[k]x[n-k] \quad (n=0,1,2,\dots, 2N-2)$
+線形畳み込み： $y_n = \sum^{N-1}_{k=0} h_k x_{n-k} \quad (n=0,1,2,\dots, 2N-2)$
 - FFT $\mathcal{F}$ →積をとる→ iFFT $\mathcal{F}^{-1}$（計算量：$O\left(N\log N \right)$）
-循環畳み込み： $y_c[n] = \mathcal{F}^{-1}(\mathcal{F}(h)\mathcal{F}(x))$
+循環畳み込み： $y = \mathcal{F}^{-1}(\mathcal{F}(h)\mathcal{F}(x))$
 
-$N_h$ 点の信号 $h[n]$ と $N_x$ 点の信号 $x[n]$ に、$N_{x-1}$ 点と $N_h-1$ 点のゼロづめを行い、$N_h+N_x-1$ 点の循環畳み込みを行うことで、線形畳み込みが実現できる。
+$N_h$ 点の信号 $h_n$ と $N_x$ 点の信号 $x_n$ に、$N_{x-1}$ 点と $N_h-1$ 点のゼロづめを行い、$N_h+N_x-1$ 点の循環畳み込みを行うことで、線形畳み込みが実現できる。
 
 > 参考：Python対応ディジタル信号処理 p.64~70
 
@@ -169,12 +169,12 @@ HiPPO 行列がもつ特殊な構造。
 
 HiPPO行列 $\bm{A}$ を低ランクの項として記述し、この分解から対角化した行列 $\bm{\Lambda}$ から抽出する。
 
-注意）まだ読んでる途中。記述が支離滅裂になってる。
+注意）まだ読んでる途中。記述が支離滅裂。
 
 ---
 
 ## 定理1
-すべてのHiPPO metricsには NPLR 表現をもつ
+すべてのHiPPO metricsは NPLR 表現をもつ
 
 $$
 \bm{A} = \bm{V} \bm{\Lambda} \bm{V}^* - \bm{P}\bm{Q}^\top = \bm{V}(\bm{\Lambda} - (\bm{V}^* \bm{P})(\bm{V}^* \bm{Q})^*)\bm{V}^*
@@ -183,5 +183,16 @@ $$
 ここで、ユニタリ行列 $\bm{V}\in \mathbb{C}^{N\times N}$、対角行列 $\bm{\Lambda}$、low-rank factorization $\bm{P},\bm{Q} \in \mathbb{R}^{N\times r}$ である。
 HiPPO-LegS, LegT, LagT はすべて $r=1$ or $r=2$ をみたす。
 
+---
 
+## Diagonal Plus Low-Rank (DPLR)
+
+NPLR にさらに制限を加える。
+行列 $\bm{A}\in \mathbb{R}^{n\times n}$ が
+
+$$
+\bm{A} = \bm{\Lambda} - pq^\top
+$$
+と書けるとき、$\bm{A}$ はDPLR表現を持つという。
+ここで、$\bm{\Lambda}$ は対角行列、$p,q \in \mathbb{R}^{n\times k} \ (k\ll n)$ である。
 
