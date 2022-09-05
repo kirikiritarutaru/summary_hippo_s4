@@ -107,13 +107,39 @@ $f$ を $N$ 個の直交多項式 $g_n$ で張られる空間上に直交射影�
 
 ---
 
+## Linear State Space Layer (LSSL)
+HiPPO の表現力を増強ために、**状態空間モデル**の発想を取り入れる
+
+時刻を $t$ とする。1次元の入力信号 $u(t)$ により $N$ 次元の隠れ状態 $x(t)$ を更新し、隠れ状態と入力信号から1次元の出力信号 $y(t)$ が出力されるモデル。$A,B,C,D$ はパラメータ行列。
+$$
+\begin{aligned}
+x^\prime (t) &= Ax(t)+Bu(t) \\
+y(t) &= Cx(t) + Du(t)
+\end{aligned}
+$$
+
+---
+
+## LSSL の利点
+
+1. LSSLs are recurrent.
+   - ステップサイズ $\Delta t$ ごとの効率的な推論
+2. LSSLs are convolutional.
+   - 学習時に並列化可能
+3. LSSLs are continuous-time.
+   - 微分方程式の特性を持つ
+      - 連続プロセスのシミュレーション、欠損データ処理、異なるタイムスケールへの適用などの応用が可能
+4. LSSLs can handle very long sequences
+   - 非常に長いシーケンスを取り扱え、効率的に計算可能
+
+---
+
 ## Structured State Space for Sequence Modeling (S4) とは？
-一言でいうと
-- 状態空間モデルとDNNを組み合わせ、長いシーケンスを効率的にモデリングする手法
-  - HiPPOフレームワークによる長期的な時間依存性への対処
-  - 計算高速化のための多数の工夫
-    - シーケンスを処理する Recurrent な部分を畳み込み Convolution の処理に置き換え並列化し、計算を高速化
-    - HiPPO行列に制約を追加し、計算を高速化
+状態空間モデルとDNNを組み合わせ、長いシーケンスを効率的にモデリングする手法
+- HiPPOフレームワークによる長期的な時間依存性への対処
+- LSSL に多数の工夫を追加し、計算を高速化
+  - シーケンスを処理する Recurrent な部分を畳み込み Convolution の処理に置き換え並列化
+  - HiPPO行列に制約を追加
 
 ---
 
