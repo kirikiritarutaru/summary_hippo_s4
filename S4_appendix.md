@@ -196,3 +196,17 @@ $$
 と書けるとき、$\bm{A}$ はDPLR表現を持つという。
 ここで、$\bm{\Lambda}$ は対角行列、$p,q \in \mathbb{R}^{n\times k} \ (k\ll n)$ である。
 
+---
+
+## 定理2 S4 Recurrence
+ステップサイズ $\Delta$ が与えられたとき、状態数を $N$ とすると、離散SSMは1ステップ $O(N)$ で計算できる。
+
+離散SSMの式（状態空間モデルの離散化のスライドに記載 ）
+$$
+\begin{aligned}
+\bm{\overline{A}} &= \left(\bm{I} - \frac{\Delta}{2}\cdot \bm{A} \right)^{-1} \left(\bm{I} + \frac{\Delta}{2}\cdot \bm{A} \right) \\
+\bm{\overline{B}} &= \left(\bm{I} - \frac{\Delta}{2}\cdot \bm{A} \right)^{-1}\Delta \bm{B},\quad \bm{\overline{C}} = \bm{C}
+\end{aligned}
+$$
+
+
