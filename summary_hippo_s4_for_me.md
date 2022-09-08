@@ -156,6 +156,7 @@ $$
 x^{\prime}(t) &= \bm{A}x(t)+ \bm{B}u(t) \\
 y(t) &= \bm{C}x(t)+\bm{D}u(t)
 \end{aligned}
+\qquad\qquad\tag{1}
 $$
 S4 では時系列を取り扱うDNNのブラックボックス表現として状態空間モデルを利用する。
 （S4では、$\bm{D}=0$ と仮定する。$\bm{D}u$ の項はスキップ接続とみなすことができ、計算が容易）
@@ -171,6 +172,7 @@ $$
 x_k &= \bm{\overline{A}}x_{k-1} + \bm{\overline{B}}u_k \\
 y_k &= \bm{\overline{C}}x_k
 \end{aligned}
+\qquad\qquad\tag{2}
 $$
 ここで、パラメータ $\bm{A},\bm{B},\bm{C}$ をバイリニア法（双一次変換）を用いて離散化する。
 各パラメータの近似行列 $\bm{\overline{A}}, \bm{\overline{B}}, \bm{\overline{C}}$ は、
@@ -192,12 +194,60 @@ $$
 y_k &= \overline{\bm{C}}\overline{\bm{A}}^k\overline{\bm{B}}u_0 + \overline{\bm{C}}\overline{\bm{A}}^{k-1}\overline{\bm{B}}u_1 + \cdots + \overline{\bm{C}}\overline{\bm{A}}\overline{\bm{B}}u_{k-1} + \overline{\bm{C}}\overline{\bm{B}}u_k \\
 y &= \overline{\bm{K}} * u
 \end{aligned}
+\qquad\qquad\tag{3}
 $$
 ここで、畳み込みカーネル $\overline{\bm{K}}$ は
 $$
 \overline{\bm{K}} \in \mathbb{R}^L := \mathcal{K}_L\left(\overline{\bm{A}}, \overline{\bm{B}}, \overline{\bm{C}} \right) :=\left(\overline{\bm{C}}\overline{\bm{A}}^i\overline{\bm{B}} \right)_{i\in[L]} = \left(\overline{\bm{C}}\overline{\bm{B}},\ \overline{\bm{C}}\overline{\bm{A}}\overline{\bm{B}},\ \dots,\ \overline{\bm{C}}\overline{\bm{A}}^{L-1}\overline{\bm{B}} \right).
 $$
 以後、$\overline{\bm{K}}$ を SSM畳み込みカーネル または SSM畳み込みフィルター と呼ぶ。
+
+---
+
+## S4の論文がフォーカスすること
+
+- SSMの連続表現　　 (1) $(\bm{A,B,C})$
+- SSMの再帰表現　　 (2) $(\bm{\overline{A},\overline{B},\overline{C}})$
+- SSMの畳み込み表現 (3) $\bm{\overline{K}}$
+
+を効率的に計算すること
+
+---
+
+### 畳み込みの高速化
+
+$\overline{\bm{K}}$ を素朴に計算すると、$\overline{\bm{A}}$ を $L$ 回乗算する必要があり、$O(N^2 L)$ の演算と $O(NL)$ の空間が必要となる。
+
+SSMを単純化できる $\overline{\bm{A}}$ のもつ特別な構造を用いて、ボトルネックを解消する。
+
+---
+
+### 補題（論文のナンバリングだと Lemma 3.1）
+SSMの共役をとったものはSSMと同等の関係にある。
+$$
+(\bm{A,B,C}) \sim (\bm{V^{-1}AV, V^{-1}B, CV})
+$$
+
+証明）
+$x$ と $\tilde{x}$ で定義される状態を持つSSMをそれぞれ以下のように書く。
+$$
+\begin{aligned}
+x^\prime &= \bm{A}x+\bm{B}u &\qquad \tilde{x}^\prime &= \bm{V^{-1}AV}\tilde{x}+\bm{V^{-1}B}u \ \cdots\star\\
+y &= \bm{C}x & y &= \bm{CV}\tilde{x}
+\end{aligned}
+$$
+$\star$ の式に左から $\bm{V}$ をかけた後、$x=\bm{V}\tilde{x}$ とおくと、左の式になる。
+2つのSSMは同じ演算子 $u \mapsto y$ となり、状態 $x$ の基底を $\bm{V}$ によって変更しただけとなる。
+
+---
+
+### 対角化の動機
+
+この補題によって、$\bm{A}$ を共役によって、標準形式にする動機付けとなる。
+$\bm{A}$ が対角行列であれば、ヴァンデルモンド積となり、 $O((N+L)\log^2(N+L))$ まで計算量をおとせる。
+
+**しかしながら**、
+HiPPO 行列の要素数は状態数 $N$ に対して指数関数的に大きくなり、対角化が数値的に実行不可能になる問題がある。
 
 ---
 
